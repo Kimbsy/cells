@@ -1,26 +1,40 @@
 (ns cells.core
   (:require [cells.util :as u]
             [cells.cell :as c]
+            [cells.io :as cio]
+            [cells.stats :as s]
             [clojure.pprint])
   (:import [com.kimbsy.sim.BaseSim]
            [com.kimbsy.sim.BaseSimFrame]
-           [com.kimbsy.sim.sprite.BaseSprite]
-           [java.awt.Point])
+           [com.kimbsy.sim.sprite.BaseSprite])
   (:gen-class))
 
-(def state (atom {:cells (take 100 (repeatedly c/gen-cell))}))
+(def state (atom {:cells (take 10 (repeatedly c/starting-cell))
+                  :food {}
+                  :running true
+                  :stats false}))
 
 (defn update-all [state]
-  (assoc state :cells (map c/update-cell (:cells state))))
+  (if (:running state)
+    (assoc state
+           :cells (->> (:cells state)
+                       (map c/update-cell)
+                       (reduce c/breed [])
+                       (filter c/alive?)))
+    state))
 
 (defn paint-all [g2d]
   (doseq [c (:cells @state)]
-    (c/draw-cell g2d c)))
+    (c/draw-cell g2d c))
+  (if (:stats @state)
+    (s/draw-stats g2d @state)))
 
 (defn proxy-sim []
   (proxy [com.kimbsy.sim.BaseSim] []
     (update []
-      (swap! state update-all))))
+      (swap! state update-all))
+    (onKeyTyped [e]
+      (swap! state cio/handle-key-press e))))
 
 (defn proxy-frame [sim]
   (proxy [com.kimbsy.sim.BaseSimFrame] [sim (.getTitle sim)]

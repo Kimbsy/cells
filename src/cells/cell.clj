@@ -1,10 +1,15 @@
 (ns cells.cell
-  (:import [java.awt.Point])
   (:require [cells.util :as u]))
 
-(defn gen-cell [] {:pos (u/rand-pos)
+(defn starting-cell [] {:pos (u/rand-pos)
                    :size {:w 4
-                          :h 4}})
+                          :h 4}
+                   :energy 6400
+                   :gen 0
+                   :age 0})
+
+(defn alive? [cell]
+  (>= (:energy cell) 0))
 
 (defn draw-cell [g2d cell]
   (.setColor g2d java.awt.Color/white)
@@ -16,8 +21,23 @@
 
 (defn update-pos [pos]
   (assoc pos
-         :x (+ (:x pos) (- (rand-int 3) 1))
-         :y (+ (:y pos) (- (rand-int 3) 1))))
+         :x (+ (:x pos) (dec (rand-int 3)))
+         :y (+ (:y pos) (dec (rand-int 3)))))
 
 (defn update-cell [cell]
-  (assoc cell :pos (u/bound (update-pos (:pos cell)))))
+  (assoc cell
+         :pos (u/bound (update-pos (:pos cell)))
+         :energy (- (:energy cell) (rand-int 2))
+         :age (inc (:age cell))))
+
+(defn split-cell [cell]
+  [(assoc cell :energy (/ (:energy cell) 2))
+   (assoc cell
+          :energy (/ (:energy cell) 2)
+          :gen (inc (:gen cell))
+          :age 0)])
+
+(defn breed [cells cell]
+  (if (> (:energy cell) 100)
+    (apply conj cells (split-cell cell))
+    (conj cells cell)))
