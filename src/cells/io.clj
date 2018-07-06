@@ -8,7 +8,10 @@
               (assoc state :running (not (:running state))))
           (= c \s)
           (do (println "toggling stats")
-              (assoc state :stats (not (:stats state))))
+              (assoc state :show-stats (not (:show-stats state))))
+          (= c \f)
+          (do (println "toggling food")
+              (assoc state :show-food (not (:show-food state))))
           :else
           (do (println "unused key")
               state))))

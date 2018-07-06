@@ -1,7 +1,7 @@
 (ns cells.util)
 
-(def width 840)
-(def height 840)
+(def width 500)
+(def height 500)
 
 (defn rand-pos []
   {:x (rand-int width)

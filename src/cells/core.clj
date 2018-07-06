@@ -1,6 +1,7 @@
 (ns cells.core
   (:require [cells.util :as u]
             [cells.cell :as c]
+            [cells.food :as f]
             [cells.io :as cio]
             [cells.stats :as s]
             [clojure.pprint])
@@ -9,24 +10,31 @@
            [com.kimbsy.sim.sprite.BaseSprite])
   (:gen-class))
 
-(def state (atom {:cells (take 10 (repeatedly c/starting-cell))
-                  :food {}
+(def state (atom {:cells (take 2 (repeatedly c/starting-cell))
+                  :food (f/starting-food)
                   :running true
-                  :stats false}))
+                  :show-stats false}))
 
 (defn update-all [state]
   (if (:running state)
-    (assoc state
-           :cells (->> (:cells state)
-                       (map c/update-cell)
-                       (reduce c/breed [])
-                       (filter c/alive?)))
+    (let [feed-output (f/feed state)
+          fed-cells (:cells feed-output)
+          drained-food (:food feed-output)]
+      (assoc state
+             :cells (->> fed-cells
+                         (map c/move)
+                         (map c/age)
+                         (reduce c/breed [])
+                         (filter c/alive?))
+             :food drained-food))
     state))
 
 (defn paint-all [g2d]
+  (if (:show-food @state)
+    (f/draw g2d @state))
   (doseq [c (:cells @state)]
-    (c/draw-cell g2d c))
-  (if (:stats @state)
+    (c/draw g2d c))
+  (if (:show-stats @state)
     (s/draw-stats g2d @state)))
 
 (defn proxy-sim []

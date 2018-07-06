@@ -1,5 +1,6 @@
 (ns cells.cell
-  (:require [cells.util :as u]))
+  (:require [cells.util :as u]
+            [cells.food :as f]))
 
 (defn starting-cell [] {:pos (u/rand-pos)
                    :size {:w 4
@@ -11,7 +12,7 @@
 (defn alive? [cell]
   (>= (:energy cell) 0))
 
-(defn draw-cell [g2d cell]
+(defn draw [g2d cell]
   (.setColor g2d java.awt.Color/white)
   (.drawRect g2d
              (get-in cell [:pos :x])
@@ -19,14 +20,13 @@
              (get-in cell [:size :w])
              (get-in cell [:size :h])))
 
-(defn update-pos [pos]
-  (assoc pos
-         :x (+ (:x pos) (dec (rand-int 3)))
-         :y (+ (:y pos) (dec (rand-int 3)))))
+(defn move [cell]
+  (let [pos (:pos cell)]
+    (assoc cell :pos (u/bound {:x (+ (:x pos) (dec (rand-int 3)))
+                               :y (+ (:y pos) (dec (rand-int 3)))}))))
 
-(defn update-cell [cell]
+(defn age [cell]
   (assoc cell
-         :pos (u/bound (update-pos (:pos cell)))
          :energy (- (:energy cell) (rand-int 2))
          :age (inc (:age cell))))
 
