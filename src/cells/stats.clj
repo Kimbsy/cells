@@ -22,5 +22,3 @@
                       (str "Max generation: " max-gen)
                       (str "Average cell energy: " (int average-cell-energy))
                       (str "Remaining energy: " remaining-energy)])))))
-
-
